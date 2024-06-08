@@ -3,15 +3,15 @@ import path from 'path';
 import chokidar from 'chokidar';
 
 
-async function listAllFiles(imgPath: string, subDisr: string[], filterFn: (f: string) => boolean): Promise<string[]> {
+async function listAllFiles(imgPath: string, subDisr: string[]): Promise<string[]> {
   const files = await fs.readdir(path.join(imgPath, ...subDisr));
   const res: string[] = [];
   for (let f of files) {
     const filePath = path.join(imgPath, ...subDisr, f);
     const stat = await fs.lstat(filePath);
     if (stat.isDirectory()) {
-      res.push(...(await listAllFiles(imgPath, [...subDisr, f], filterFn)));
-    } else if (filterFn(f)) {
+      res.push(...(await listAllFiles(imgPath, [...subDisr, f])));
+    } else {
       res.push([...subDisr, f].join('/'));
     }
   }
@@ -50,11 +50,14 @@ export function watchFsTransform(config: {
   sourceDir: string;
   componentPathToReload: string;
   reloadFunction: (code: string, filesList: string[]) => string;
-  filterFiles: (f: string) => boolean;
+  filterFiles?: (f: string) => boolean;
   debug?: boolean;
 }) {
   let watcher: any = null;
   let logger: any = null;
+  if (!config.sourceDir || !config.componentPathToReload || !config.reloadFunction) {
+    throw Error("Invalid configuration for watchFsTransform ak-vite-plugins plugin");
+  }
   return {
     name: 'vite-watch-fs-transform',
     enforce: 'pre',
@@ -98,8 +101,11 @@ export function watchFsTransform(config: {
       }
     },
     async transform(code: string, id: string) {
-      if (id === config.componentPathToReload) {
-        const allFiles = await listAllFiles(config.sourceDir, [], config.filterFiles)
+      if (id.startsWith(config.componentPathToReload)) {
+        let allFiles = await listAllFiles(config.sourceDir, [])
+        if (config.filterFiles) {
+          allFiles = allFiles.filter(config.filterFiles);
+        }
         if (config.debug) {
           logger.info(`Modifying source code for ${config.componentPathToReload}`);
         }
