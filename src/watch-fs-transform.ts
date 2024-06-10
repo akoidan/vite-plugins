@@ -67,13 +67,13 @@ export function watchFsTransform(config: {
         const module = server.moduleGraph.getModuleById(config.componentPathToReload);
         if (module) {
           if (config.debug) {
-            logger.info(`FS changed, reloading ${config.componentPathToReload}`);
+            logger?.info(`FS changed, reloading ${config.componentPathToReload}`);
           }
           server.moduleGraph.invalidateModule(module);
           server.ws.send({ type: 'full-reload' });
         } else {
           if (config.debug) {
-            logger.info(`Cannot find module ${config.componentPathToReload}`);
+            logger?.info(`Cannot find module ${config.componentPathToReload}`);
           }
         }
       }
@@ -107,7 +107,7 @@ export function watchFsTransform(config: {
           allFiles = allFiles.filter(config.filterFiles);
         }
         if (config.debug) {
-          logger.info(`Modifying source code for ${config.componentPathToReload}`);
+          logger?.info(`Modifying source code for ${config.componentPathToReload}`);
         }
         code = config.reloadFunction(code, allFiles);
         return {
