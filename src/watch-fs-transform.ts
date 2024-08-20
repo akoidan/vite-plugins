@@ -111,8 +111,7 @@ export function watchFsTransform(config: {
         }
         code = config.reloadFunction(code, allFiles);
         return {
-          code,
-          map: null
+          code
         };
       }
     }
